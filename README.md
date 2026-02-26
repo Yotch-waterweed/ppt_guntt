@@ -5,8 +5,12 @@ Excelファイルからガントチャートの PowerPoint スライドを自動
 ## セットアップ
 
 ```bash
+python3 -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 ```
+
+> 2回目以降は `source venv/bin/activate` だけでOKです。
 
 ## クイックスタート
 
