@@ -5,6 +5,7 @@
 import streamlit as st
 import tempfile
 import os
+import pandas as pd
 from excel_reader import read_excel
 from gantt_generator import GanttChartGenerator
 
@@ -36,18 +37,48 @@ with st.sidebar:
         min_value=1, max_value=24, value=3,
         help="カレンダーがこの月数以上の場合、矢羽のテキストを外側に配置"
     )
+
+# --- Excelの書き方ガイド ---
+with st.expander("📖 はじめての方へ：Excelの書き方ガイド（クリックして展開）", expanded=False):
+    st.markdown("### 📝 Excelの基本フォーマット")
+    st.markdown("1行目はヘッダーにし、**A列〜E列**に以下のルールでデータを入力してください。")
     
-    st.divider()
-    st.markdown("### 📝 Excelフォーマット")
-    st.markdown("""
-    | 列 | 内容 |
-    |--|--|
-    | A | 大項目 |
-    | B | 種別 (`milestone`/`period`/`task`) |
-    | C | 名前 |
-    | D | 開始日 |
-    | E | 終了日 |
-    """)
+    # サンプルデータフレームを表示（Excel風）
+    df_sample = pd.DataFrame({
+        "大項目 (A列)": ["Phase1: 企画", "Phase1: 企画", "Phase1: 企画", "Phase2: 設計", "Phase2: 設計"],
+        "種別 (B列)": ["milestone", "period", "task", "milestone", "task"],
+        "名前 (C列)": ["PJ開始", "企画・構想", "現状分析", "設計完了", "基本設計"],
+        "開始日 (D列)": ["2025-04-01", "2025-04-01", "2025-04-01", "2025-09-30", "2025-07-01"],
+        "終了日 (E列)": ["", "2025-09-30", "2025-06-30", "", "2025-08-31"]
+    })
+    st.dataframe(df_sample, hide_index=True, use_container_width=True)
+    
+    col_a, col_b = st.columns(2)
+    with col_a:
+        st.markdown("#### 📌 B列の「種別」について")
+        st.markdown("""
+        - `period` 🟦 **(プロジェクト期間)**
+          - 指定期間に青い四角いバーを描画します。
+        - `milestone` 🔴 **(マイルストーン)**
+          - 特定の日に赤いひし形を描画します。終了日は空欄でOKです。
+        - `task` ⏭️ **(タスク / 矢羽)**
+          - 指定期間にグレーの矢羽を描画します。プロジェクトの下にぶら下がって複数行並びます。
+        """)
+    with col_b:
+        st.markdown("#### 📌 A列の「大項目」について")
+        st.markdown("""
+        大項目（A列）に**同じ名前**が連続している行は、**1つのグループ（レーン）**としてまとめられます。
+        大項目が変わると、スライド上で新しい行（レーン）が作られます。
+        """)
+    
+    # サンプルダウンロードボタン
+    try:
+        with open("sample_data.xlsx", "rb") as f:
+            st.download_button("📥 入力用テンプレート（サンプルExcel）をダウンロード", data=f.read(), file_name="sample_data.xlsx", type="primary")
+    except FileNotFoundError:
+        pass
+
+st.divider()
 
 # --- メインエリア ---
 uploaded_file = st.file_uploader(
@@ -79,14 +110,14 @@ if uploaded_file is not None:
     # データプレビュー
     st.success(f"✅ {len(data)} プロジェクトを検出しました")
     
-    with st.expander("📋 読み込みデータの詳細", expanded=False):
+    with st.expander("📋 読み込みデータのプレビュー", expanded=False):
         for d in data:
             items_n = len(d.get("items", []))
             tasks_n = len(d.get("tasks", []))
             st.markdown(f"**{d['name']}** — {items_n} items, {tasks_n} tasks")
     
     # 生成ボタン
-    if st.button("🚀 ガントチャートを生成", type="primary", use_container_width=True):
+    if st.button("🚀 ガントチャートをPTTXで生成", type="primary", use_container_width=True):
         with st.spinner("生成中..."):
             try:
                 gen = GanttChartGenerator(
@@ -120,14 +151,4 @@ if uploaded_file is not None:
 else:
     # アップロード前の説明
     st.info("👆 上のエリアにExcelファイルをドラッグ＆ドロップしてください")
-    
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.markdown("### 1️⃣ Excelを用意")
-        st.markdown("A〜E列にデータを入力")
-    with col2:
-        st.markdown("### 2️⃣ アップロード")
-        st.markdown("ファイルをドラッグ＆ドロップ")
-    with col3:
-        st.markdown("### 3️⃣ ダウンロード")
-        st.markdown("PPTXファイルを取得")
+
