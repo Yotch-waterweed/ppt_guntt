@@ -1,0 +1,11 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+
+# 生成物
+*.pptx
+*.pdf
+
+# OS
+.DS_Store
