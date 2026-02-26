@@ -14,6 +14,17 @@ pip install -r requirements.txt
 
 ## クイックスタート
 
+### Web GUIで使う場合（おすすめ）
+
+ブラウザ上でExcelファイルをアップロードして直感的に操作できます。
+
+```bash
+streamlit run app.py
+```
+> 初回起動時はブラウザが自動で立ち上がります（`http://localhost:8501`）
+
+### コマンドラインで使う場合
+
 ```bash
 # Excelから生成
 python main.py --input sample_data.xlsx --output gantt.pptx
