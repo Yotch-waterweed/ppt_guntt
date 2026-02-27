@@ -84,18 +84,18 @@ with st.expander("✨ こんなパワポが作れます（出力サンプル）"
     
     col1, col2 = st.columns(2)
     with col1:
-        st.markdown("**12ヶ月プロジェクト（自動/BMEモード）**")
-        if os.path.exists("assets/sample_12month.pptx.png"):
-            st.image("assets/sample_12month.pptx.png", use_container_width=True)
+        st.markdown("**6ヶ月プロジェクト（BMEモード） 終了月2026-10 テキスト外だし閾値24ヶ月**")
+        if os.path.exists("assets/sample_6month.png"):
+            st.image("assets/sample_6month.png", use_container_width=True)
             
-        st.markdown("**Excelデータから生成（24ヶ月/自動モード）**")
-        if os.path.exists("assets/from_excel.pptx.png"):
-            st.image("assets/from_excel.pptx.png", use_container_width=True)
+        st.markdown("**12ヶ月プロジェクト（monthlyモード） 終了月2026-04 テキスト外だし閾値5ヶ月**")
+        if os.path.exists("assets/sample_12month.png"):
+            st.image("assets/sample_12month.png", use_container_width=True)
             
     with col2:
-        st.markdown("**32ヶ月プロジェクト（四半期モード）**")
-        if os.path.exists("assets/sample_32month_q.pptx.png"):
-            st.image("assets/sample_32month_q.pptx.png", use_container_width=True)
+        st.markdown("**32ヶ月プロジェクト（四半期モード）終了月2028-01 テキスト外だし閾値5ヶ月**")
+        if os.path.exists("assets/sample_32month.png"):
+            st.image("assets/sample_32month.png", use_container_width=True)
             
 st.divider()
 
