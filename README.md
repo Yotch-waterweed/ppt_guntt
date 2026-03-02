@@ -34,7 +34,7 @@ streamlit run app.py
 ### コマンドラインで使う場合
 
 ```bash
-# Excelから生成
+# Excelから生成（基本）
 python main.py --input sample_data.xlsx --output gantt.pptx
 
 # 四半期モードで生成
@@ -42,6 +42,9 @@ python main.py -i sample_data.xlsx -o gantt.pptx --mode quarterly
 
 # 期間を指定
 python main.py -i data.xlsx -o gantt.pptx --start 2025-04 --end 2027-03
+
+# タスクテキストを矢羽の外に配置
+python main.py -i sample_data.xlsx -o gantt.pptx --external-label
 ```
 
 ## コマンドオプション一覧
@@ -54,7 +57,7 @@ python main.py -i data.xlsx -o gantt.pptx --start 2025-04 --end 2027-03
 | `--start` | | 表示開始月 `YYYY-MM` | 自動 |
 | `--end` | | 表示終了月 `YYYY-MM` | 自動 |
 | `--mode` | `-m` | カレンダー表示モード | `auto` |
-| `--external-label` | | 矢羽テキスト外出し閾値（月数） | `3` |
+| `--external-label` | | タスク（矢羽）テキストを図形の外に配置 | OFF |
 
 ## カレンダー表示モード（`--mode`）
 
@@ -67,6 +70,19 @@ python main.py -i data.xlsx -o gantt.pptx --start 2025-04 --end 2027-03
 
 **四半期の定義（日本の会計年度）：**
 Q1 = 4〜6月 / Q2 = 7〜9月 / Q3 = 10〜12月 / Q4 = 1〜3月
+
+## タスクテキストの表示モード（`--external-label`）
+
+| モード | テキスト配置 | 特徴 |
+|--|--|--|
+| OFF（デフォルト） | 矢羽の図形内に左揃え・折り返しなし | テキストが図形を超えても表示される |
+| ON（`--external-label`） | 矢羽の右横にテキストボックスで配置 | テキストが長くても視認性が高い |
+
+## 主な機能
+
+- **マイルストーン自動配置**: 同一レーン内のマイルストーンが重なる場合、最大3段まで自動的に段をずらして配置。日付が若いものが上段に表示されます
+- **カレンダー自動拡張**: 右端のラベルが表からはみ出さないよう、終了月を+1ヶ月分余白として自動拡張
+- **レイアウト自動調整**: プロジェクト数やタスク数に応じて、図形サイズやフォントが自動スケール
 
 ## Excelフォーマット
 
@@ -93,19 +109,22 @@ Q1 = 4〜6月 / Q2 = 7〜9月 / Q3 = 10〜12月 / Q4 = 1〜3月
 
 ### ルール
 - **大項目**が同じ連続行は1つのレーンにまとめられます
-- **period**: カレンダー上にバー（青）で表示
-- **milestone**: ひし形（赤）で表示。終了日は不要
-- **task**: 矢羽（グレー）で表示。1レーン内に縦に並びます
+- **period**: カレンダー上にバー（青）で表示。テキストは図形内に左揃え
+- **milestone**: ひし形（赤）で表示。終了日は不要。密集時は最大3段に自動配置
+- **task**: 矢羽で表示。1レーン内に縦に並びます
 
 ## ファイル構成
 
 ```
 ppt_guntt/
+├── app.py               # Streamlit Web GUI
 ├── main.py              # CLI エントリーポイント
 ├── gantt_generator.py   # ガントチャート描画エンジン
 ├── excel_reader.py      # Excel → データ変換
 ├── generate_samples.py  # サンプルPPTX一括生成
 ├── sample_data.xlsx     # サンプルExcel
+├── assets/              # Streamlit用プレビュー画像
+├── output/              # 生成物の出力先（.gitignore対象）
 └── requirements.txt
 ```
 
@@ -129,6 +148,11 @@ data = [
     }
 ]
 
+# デフォルト: タスクテキストは図形内に表示
 gen = GanttChartGenerator(data, calendar_mode="auto")
 gen.generate("output.pptx")
+
+# タスクテキストを外出し表示
+gen = GanttChartGenerator(data, external_label=True, calendar_mode="auto")
+gen.generate("output_ext.pptx")
 ```
