@@ -643,7 +643,7 @@ class GanttChartGenerator:
                                 shape.text = text
                                 shape.text_frame.word_wrap = False
                                 shape.text_frame.paragraphs[0].font.size = Pt(9)
-                                shape.text_frame.paragraphs[0].font.color.rgb = RGBColor(255, 255, 255)
+                                shape.text_frame.paragraphs[0].font.color.rgb = RGBColor(50, 50, 50)
                                 shape.text_frame.paragraphs[0].alignment = PP_ALIGN.LEFT
                             else:
                                 tx_x = int(x_start + w + Pt(0))
