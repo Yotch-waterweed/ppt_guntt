@@ -14,10 +14,10 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.10'
 
@@ -29,9 +29,22 @@ jobs:
 
     - name: Create executable with PyInstaller
       run: |
-        # streamlitの本当にインストールされているパスを取得
+        # streamlitのインストールパスを取得
         $env:STREAMLIT_PATH=$(python -c "import streamlit, os; print(os.path.dirname(streamlit.__file__))")
-        pyinstaller --noconfirm --onedir --windowed --copy-metadata streamlit --add-data "${env:STREAMLIT_PATH};./streamlit" --add-data "assets;./assets" --add-data "sample_data.xlsx;." run_app.py
+
+        pyinstaller --noconfirm --onedir --windowed `
+          --copy-metadata streamlit `
+          --add-data "${env:STREAMLIT_PATH};./streamlit" `
+          --add-data "app.py;." `
+          --add-data "gantt_generator.py;." `
+          --add-data "excel_reader.py;." `
+          --add-data "main.py;." `
+          --add-data "sample_data.xlsx;." `
+          --add-data "assets;./assets" `
+          --hidden-import streamlit `
+          --hidden-import streamlit.web.cli `
+          --hidden-import streamlit.runtime.scriptrunner `
+          run_app.py
 
     - name: Rename distribution folder
       run: |

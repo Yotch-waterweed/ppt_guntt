@@ -1,20 +1,27 @@
 import streamlit.web.cli as stcli
 import os, sys
 
-def resolve_path(path):
-    resolved_path = os.path.abspath(os.path.join(os.getcwd(), path))
-    return resolved_path
+def get_base_path():
+    """PyInstallerでパッケージ化されている場合は展開先、通常時はスクリプトのディレクトリを返す"""
+    if getattr(sys, 'frozen', False):
+        return sys._MEIPASS
+    return os.path.dirname(os.path.abspath(__file__))
 
 if __name__ == "__main__":
-    # app.pyのパスを取得
-    script_path = resolve_path("app.py")
+    base = get_base_path()
     
-    # 実行環境がPyInstallerでパッケージ化されているかチェック
+    # app.pyのパスを取得（PyInstaller展開先 or スクリプトと同じディレクトリ）
+    script_path = os.path.join(base, "app.py")
+    
+    # カレントディレクトリを展開先に変更（データファイル参照のため）
+    os.chdir(base)
+    
     if getattr(sys, 'frozen', False):
-        # exeから実行されている場合
-        sys.argv = ["streamlit", "run", script_path, "--global.developmentMode=false"]
-        sys.exit(stcli.main())
+        sys.argv = ["streamlit", "run", script_path,
+                     "--global.developmentMode=false",
+                     "--server.headless=true",
+                     "--browser.gatherUsageStats=false"]
     else:
-        # 通常のPythonから実行されている場合
         sys.argv = ["streamlit", "run", script_path]
-        sys.exit(stcli.main())
+    
+    sys.exit(stcli.main())
