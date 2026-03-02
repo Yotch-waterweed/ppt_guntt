@@ -32,10 +32,10 @@ with st.sidebar:
     with col2:
         end_month = st.text_input("終了月 (任意)", placeholder="2027-03", help="YYYY-MM 形式。空欄でデータから自動判定")
     
-    external_label = st.slider(
-        "テキスト外出し閾値（月数）",
-        min_value=1, max_value=24, value=3,
-        help="カレンダーがこの月数以上の場合、矢羽のテキストを外側に配置"
+    external_label = st.checkbox(
+        "矢羽テキストを外出し",
+        value=False,
+        help="ONにすると矢羽（タスク）のテキストを図形の外側に配置します"
     )
 
 # --- Excelの書き方ガイド ---
@@ -143,7 +143,7 @@ if uploaded_file is not None:
                     data,
                     start_month=start_month if start_month else None,
                     end_month=end_month if end_month else None,
-                    force_external_label_months=external_label,
+                    external_label=external_label,
                     calendar_mode=calendar_mode,
                 )
                 

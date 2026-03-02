@@ -396,18 +396,20 @@ def make_48month_data():
 
 if __name__ == "__main__":
     samples = [
-        ("sample_3month.pptx",  make_3month_data(),  99, "auto"),
-        ("sample_6month.pptx",  make_6month_data(),  99, "auto"),
-        ("sample_12month.pptx", make_12month_data(), 3,  "auto"),
-        ("sample_18month.pptx", make_18month_data(), 3,  "auto"),
-        ("sample_24month.pptx", make_24month_data(), 3,  "auto"),
-        ("sample_32month.pptx", make_32month_data(), 3,  "auto"),
-        ("sample_48month.pptx", make_48month_data(), 3,  "auto"),
+        ("sample_3month.pptx",  make_3month_data(),  False, "auto"),
+        ("sample_6month.pptx",  make_6month_data(),  False, "auto"),
+        ("sample_12month.pptx", make_12month_data(), False, "auto"),
+        ("sample_18month.pptx", make_18month_data(), False, "auto"),
+        ("sample_24month.pptx", make_24month_data(), False, "auto"),
+        ("sample_32month.pptx", make_32month_data(), False, "auto"),
+        ("sample_48month.pptx", make_48month_data(), False, "auto"),
         # 四半期モード
-        ("sample_32month_q.pptx", make_32month_data(), 3, "quarterly"),
-        ("sample_48month_q.pptx", make_48month_data(), 3, "quarterly"),
+        ("sample_32month_q.pptx", make_32month_data(), False, "quarterly"),
+        ("sample_48month_q.pptx", make_48month_data(), False, "quarterly"),
+        # 外出しモード
+        ("sample_12month_ext.pptx", make_12month_data(), True, "auto"),
     ]
     
-    for filename, data, threshold, mode in samples:
-        gen = GanttChartGenerator(data, force_external_label_months=threshold, calendar_mode=mode)
+    for filename, data, ext_label, mode in samples:
+        gen = GanttChartGenerator(data, external_label=ext_label, calendar_mode=mode)
         gen.generate(filename)

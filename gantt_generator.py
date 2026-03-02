@@ -12,14 +12,14 @@ class GanttChartGenerator:
     QUARTER_MONTHS = {1: [4, 5, 6], 2: [7, 8, 9], 3: [10, 11, 12], 4: [1, 2, 3]}
     
     def __init__(self, data: List[Dict[str, Any]], start_month: str=None, end_month: str=None,
-                 force_external_label_months: int=3,
+                 external_label: bool=False,
                  calendar_mode: str="auto", bme_threshold: int=13):
         """
         Args:
             data: ガントチャートのデータ
             start_month: 表示開始月 (YYYY-MM)
             end_month: 表示終了月 (YYYY-MM)
-            force_external_label_months: この月数以上で矢羽テキストを強制外出し
+            external_label: Trueで矢羽テキストを外出し表示
             calendar_mode: "auto", "bme", "monthly", "quarterly"
             bme_threshold: autoモード時、この月数以上でB/M/E→月単位に切替
         """
@@ -28,7 +28,7 @@ class GanttChartGenerator:
         self.prs.slide_width = Inches(13.333)
         self.prs.slide_height = Inches(7.5)
         
-        self.force_external_label_months = force_external_label_months
+        self.external_label = external_label
         self.months = self._calculate_date_range(data, start_month, end_month)
         
         # カレンダーモード判定
@@ -639,13 +639,12 @@ class GanttChartGenerator:
                         
                         text = t_item.get("name", "")
                         if text:
-                            force_ext = len(self.months) >= self.force_external_label_months
-                            if not force_ext and len(text) * Pt(7) < w * 0.85:
+                            if not self.external_label:
                                 shape.text = text
                                 shape.text_frame.word_wrap = False
                                 shape.text_frame.paragraphs[0].font.size = Pt(9)
                                 shape.text_frame.paragraphs[0].font.color.rgb = RGBColor(255, 255, 255)
-                                shape.text_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
+                                shape.text_frame.paragraphs[0].alignment = PP_ALIGN.LEFT
                             else:
                                 tx_x = int(x_start + w + Pt(0))
                                 tx_w = min(Inches(2), max(int(slide_right - tx_x), Pt(10)))

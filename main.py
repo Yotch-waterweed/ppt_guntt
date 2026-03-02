@@ -21,8 +21,8 @@ def main():
     parser.add_argument("--mode", "-m", default="auto",
                         choices=["auto", "bme", "monthly", "quarterly"],
                         help="カレンダー表示モード（デフォルト: auto）")
-    parser.add_argument("--external-label", type=int, default=3,
-                        help="テキスト外出しの月数閾値（デフォルト: 3）")
+    parser.add_argument("--external-label", action="store_true", default=False,
+                        help="矢羽テキストを図形の外に配置する")
     
     args = parser.parse_args()
     
@@ -45,7 +45,7 @@ def main():
         data,
         start_month=args.start,
         end_month=args.end,
-        force_external_label_months=args.external_label,
+        external_label=args.external_label,
         calendar_mode=args.mode,
     )
     gen.generate(args.output)
