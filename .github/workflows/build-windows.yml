@@ -44,6 +44,10 @@ jobs:
           --hidden-import streamlit `
           --hidden-import streamlit.web.cli `
           --hidden-import streamlit.runtime.scriptrunner `
+          --hidden-import pptx `
+          --hidden-import pandas `
+          --hidden-import openpyxl `
+          --hidden-import dateutil `
           run_app.py
 
     - name: Rename distribution folder
