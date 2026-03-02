@@ -141,7 +141,7 @@ class GanttChartGenerator:
             # 空いている段を探す（優先: 段0 → 段1 → 段2）
             assigned_row = MAX_ROWS - 1  # デフォルト: 最終段に強制配置
             for k in range(MAX_ROWS):
-                if x_frac > max_right[k]:
+                if x_frac >= max_right[k]:
                     assigned_row = k
                     break
             
