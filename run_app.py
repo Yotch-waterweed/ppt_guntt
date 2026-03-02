@@ -30,7 +30,6 @@ if __name__ == "__main__":
         print("[INFO] Streamlit サーバーを起動中...")
         sys.argv = ["streamlit", "run", script_path,
                      "--global.developmentMode=false",
-                     "--server.headless=true",
                      "--browser.gatherUsageStats=false"]
     else:
         sys.argv = ["streamlit", "run", script_path]
