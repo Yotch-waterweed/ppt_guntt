@@ -267,8 +267,10 @@ class GanttChartGenerator:
             max_date = datetime.date(y, m, calendar.monthrange(y, m)[1])
             
         start_cal = datetime.date(min_date.year, min_date.month, 1)
-        end_cal = datetime.date(max_date.year, max_date.month,
-                                calendar.monthrange(max_date.year, max_date.month)[1])
+        # ラベル用の余白を確保するため、終了月を+1ヶ月拡張
+        end_date_extended = datetime.date(max_date.year, max_date.month, 1) + relativedelta(months=1)
+        end_cal = datetime.date(end_date_extended.year, end_date_extended.month,
+                                calendar.monthrange(end_date_extended.year, end_date_extended.month)[1])
         
         months = []
         current = start_cal
@@ -547,7 +549,7 @@ class GanttChartGenerator:
         color_task = RGBColor(130, 130, 130)
         color_milestone = RGBColor(220, 80, 80)
         color_text_dark = RGBColor(50, 50, 50)
-        table_right = table_shape.left + table_shape.width  # テーブルの右端を境界にする
+        slide_right = self.prs.slide_width - Inches(0.1)
         
         L = self.layout
         bar_h, ms_size, ms_clearance = L["bar_h"], L["ms_size"], L["ms_clearance"]
@@ -618,8 +620,8 @@ class GanttChartGenerator:
                     text = p_item.get("name", "")
                     if text:
                         tx_x = int(x + ms_size/2 + Pt(1))
-                        tx_w = min(Inches(1.5), max(int(table_right - tx_x), Pt(10)))
-                        if tx_x < table_right:
+                        tx_w = min(Inches(1.5), max(int(slide_right - tx_x), Pt(10)))
+                        if tx_x < slide_right:
                             self._add_label(slide, tx_x, ms_y, tx_w, ms_size, text, color_text_dark)
             
             if has_tasks:
@@ -646,17 +648,15 @@ class GanttChartGenerator:
                                 shape.text_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
                             else:
                                 tx_x = int(x_start + w + Pt(0))
-                                tx_w = min(Inches(2), max(int(table_right - tx_x), Pt(10)))
-                                if tx_x < table_right:
+                                tx_w = min(Inches(2), max(int(slide_right - tx_x), Pt(10)))
+                                if tx_x < slide_right:
                                     self._add_label(slide, tx_x, chevron_y, tx_w, chevron_h, text, color_text_dark)
 
     def _add_label(self, slide, x, y, w, h, text, color):
         """テキストボックスを追加するヘルパー"""
-        from pptx.enum.text import MSO_AUTO_SIZE
         txBox = slide.shapes.add_textbox(int(x), int(y), int(w), int(h))
         tf = txBox.text_frame
         tf.word_wrap = False
-        tf.auto_size = MSO_AUTO_SIZE.NONE  # テキストボックスの自動拡張を無効化
         p = tf.paragraphs[0]
         p.text = text
         p.font.size = Pt(9)
