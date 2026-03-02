@@ -592,17 +592,11 @@ class GanttChartGenerator:
                         
                         text = p_item.get("name", "")
                         if text:
-                            if len(text) * Pt(12) < w * 0.9:
-                                shape.text = text
-                                shape.text_frame.word_wrap = False
-                                shape.text_frame.paragraphs[0].font.size = Pt(9)
-                                shape.text_frame.paragraphs[0].font.color.rgb = RGBColor(255, 255, 255)
-                                shape.text_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
-                            else:
-                                tx_x = int(x_start + w + Pt(1))
-                                tx_w = min(Inches(2), max(int(slide_right - tx_x), Pt(10)))
-                                if tx_x < slide_right:
-                                    self._add_label(slide, tx_x, bar_y, tx_w, bar_h, text, color_text_dark)
+                            shape.text = text
+                            shape.text_frame.word_wrap = False
+                            shape.text_frame.paragraphs[0].font.size = Pt(9)
+                            shape.text_frame.paragraphs[0].font.color.rgb = RGBColor(255, 255, 255)
+                            shape.text_frame.paragraphs[0].alignment = PP_ALIGN.LEFT
                 
                 # マイルストーンを段割り当てに基づいて描画
                 milestones = [p for p in item.get("items", [])
