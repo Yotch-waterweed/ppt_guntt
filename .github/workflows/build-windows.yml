@@ -31,7 +31,7 @@ jobs:
       run: |
         # streamlitの本当にインストールされているパスを取得
         $env:STREAMLIT_PATH=$(python -c "import streamlit, os; print(os.path.dirname(streamlit.__file__))")
-        pyinstaller --noconfirm --onedir --windowed --add-data "${env:STREAMLIT_PATH};./streamlit" --add-data "assets;./assets" --add-data "sample_data.xlsx;." run_app.py
+        pyinstaller --noconfirm --onedir --windowed --copy-metadata streamlit --add-data "${env:STREAMLIT_PATH};./streamlit" --add-data "assets;./assets" --add-data "sample_data.xlsx;." run_app.py
 
     - name: Rename distribution folder
       run: |
