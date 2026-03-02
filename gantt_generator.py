@@ -509,7 +509,7 @@ class GanttChartGenerator:
                                 shape.text_frame.paragraphs[0].font.color.rgb = RGBColor(255, 255, 255)
                                 shape.text_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
                             else:
-                                tx_x = int(x_start + w + Pt(4))
+                                tx_x = int(x_start + w + Pt(1))
                                 tx_w = min(Inches(2), max(int(slide_right - tx_x), Pt(10)))
                                 if tx_x < slide_right:
                                     self._add_label(slide, tx_x, bar_y, tx_w, bar_h, text, color_text_dark)
@@ -526,7 +526,7 @@ class GanttChartGenerator:
                         
                         text = p_item.get("name", "")
                         if text:
-                            tx_x = int(x + ms_size/2 + Pt(4))
+                            tx_x = int(x + ms_size/2 + Pt(1))
                             tx_w = min(Inches(1.5), max(int(slide_right - tx_x), Pt(10)))
                             if tx_x < slide_right:
                                 self._add_label(slide, tx_x, ms_y, tx_w, ms_size, text, color_text_dark)
@@ -553,7 +553,7 @@ class GanttChartGenerator:
                                 shape.text_frame.paragraphs[0].font.color.rgb = RGBColor(255, 255, 255)
                                 shape.text_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
                             else:
-                                tx_x = int(x_start + w + Pt(2))
+                                tx_x = int(x_start + w + Pt(0))
                                 tx_w = min(Inches(2), max(int(slide_right - tx_x), Pt(10)))
                                 if tx_x < slide_right:
                                     self._add_label(slide, tx_x, chevron_y, tx_w, chevron_h, text, color_text_dark)
