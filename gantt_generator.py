@@ -505,6 +505,7 @@ class GanttChartGenerator:
                         if text:
                             if len(text) * Pt(12) < w * 0.9:
                                 shape.text = text
+                                shape.text_frame.word_wrap = False
                                 shape.text_frame.paragraphs[0].font.size = Pt(9)
                                 shape.text_frame.paragraphs[0].font.color.rgb = RGBColor(255, 255, 255)
                                 shape.text_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
@@ -549,6 +550,7 @@ class GanttChartGenerator:
                             force_ext = len(self.months) >= self.force_external_label_months
                             if not force_ext and len(text) * Pt(7) < w * 0.85:
                                 shape.text = text
+                                shape.text_frame.word_wrap = False
                                 shape.text_frame.paragraphs[0].font.size = Pt(9)
                                 shape.text_frame.paragraphs[0].font.color.rgb = RGBColor(255, 255, 255)
                                 shape.text_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
