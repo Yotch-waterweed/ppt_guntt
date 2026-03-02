@@ -1,4 +1,3 @@
-import streamlit.web.cli as stcli
 import os, sys
 
 def get_base_path():
@@ -10,6 +9,17 @@ def get_base_path():
 if __name__ == "__main__":
     base = get_base_path()
     
+    if getattr(sys, 'frozen', False):
+        print("=" * 50)
+        print("  ガントチャート生成ツール を起動しています...")
+        print("  ブラウザが自動で開くまでお待ちください。")
+        print("  （初回は30秒ほどかかる場合があります）")
+        print("=" * 50)
+        print()
+    
+    # streamlitのインポートは時間がかかるため、メッセージ表示後に行う
+    import streamlit.web.cli as stcli
+    
     # app.pyのパスを取得（PyInstaller展開先 or スクリプトと同じディレクトリ）
     script_path = os.path.join(base, "app.py")
     
@@ -17,6 +27,7 @@ if __name__ == "__main__":
     os.chdir(base)
     
     if getattr(sys, 'frozen', False):
+        print("[INFO] Streamlit サーバーを起動中...")
         sys.argv = ["streamlit", "run", script_path,
                      "--global.developmentMode=false",
                      "--server.headless=true",

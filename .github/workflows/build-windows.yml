@@ -32,7 +32,7 @@ jobs:
         # streamlitのインストールパスを取得
         $env:STREAMLIT_PATH=$(python -c "import streamlit, os; print(os.path.dirname(streamlit.__file__))")
 
-        pyinstaller --noconfirm --onedir --windowed `
+        pyinstaller --noconfirm --onedir --console `
           --copy-metadata streamlit `
           --add-data "${env:STREAMLIT_PATH};./streamlit" `
           --add-data "app.py;." `
