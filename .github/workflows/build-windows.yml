@@ -38,7 +38,7 @@ jobs:
         Rename-Item -Path "dist/run_app" -NewName "ppt_guntt_app"
 
     - name: Upload Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ppt_guntt-windows
         path: dist/ppt_guntt_app
