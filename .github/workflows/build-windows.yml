@@ -1,0 +1,76 @@
+name: Build Windows Embedded App
+
+on:
+  push:
+    branches:
+      - main
+      - feature/embedded-python
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Environment Variables
+      run: |
+        echo "PYTHON_VERSION=3.10.11" >> $env:GITHUB_ENV
+        echo "PYTHON_ZIP=python-3.10.11-embed-amd64.zip" >> $env:GITHUB_ENV
+
+    - name: Create Directory Structure
+      run: |
+        mkdir -p MyApp/bin/python
+        mkdir -p MyApp/bin/assets
+
+    - name: Download and Extract Embedded Python
+      run: |
+        Invoke-WebRequest -Uri "https://www.python.org/ftp/python/$env:PYTHON_VERSION/$env:PYTHON_ZIP" -OutFile $env:PYTHON_ZIP
+        Expand-Archive -Path $env:PYTHON_ZIP -DestinationPath MyApp/bin/python
+
+    - name: Install pip in Embedded Python
+      run: |
+        # get-pip.py をダウンロード
+        Invoke-WebRequest -Uri "https://bootstrap.pypa.io/get-pip.py" -OutFile MyApp/bin/python/get-pip.py
+        
+        # ._pth ファイルを編集してカレントディレクトリ(.)をインポートパスに追加（pipインストールに必須）
+        $pthFile = Get-ChildItem -Path MyApp/bin/python -Filter "python*._pth" | Select-Object -First 1
+        (Get-Content $pthFile.FullName) -replace '#import site', 'import site' | Set-Content $pthFile.FullName
+        
+        # pip をインストール
+        cd MyApp/bin/python
+        .\python.exe get-pip.py
+        
+        # get-pip.py はもう不要
+        Remove-Item get-pip.py
+
+    - name: Install Dependencies
+      run: |
+        # 依存ライブラリを embedded python にインストール
+        cd MyApp/bin/python
+        .\python.exe -m pip install -r ../../../requirements.txt
+
+    - name: Copy App Files
+      run: |
+        Copy-Item -Path "app.py" -Destination "MyApp/bin/"
+        Copy-Item -Path "gantt_generator.py" -Destination "MyApp/bin/"
+        Copy-Item -Path "excel_reader.py" -Destination "MyApp/bin/"
+        Copy-Item -Path "sample_data.xlsx" -Destination "MyApp/bin/"
+        Copy-Item -Path "assets/*" -Destination "MyApp/bin/assets/" -Recurse -Force
+
+    - name: Create Launch Script (MyApp.bat)
+      run: |
+        $batContent = "@echo off`n" +
+                      "cd /d `"%~dp0`"`n" +
+                      "bin\python\python.exe -m streamlit run bin\app.py`n" +
+                      "pause"
+        Set-Content -Path "MyApp/起動する.bat" -Value $batContent -Encoding UTF8
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ppt_guntt-windows-embedded
+        path: MyApp
