@@ -546,7 +546,7 @@ class GanttChartGenerator:
         
         table = table_shape.table
         color_project = RGBColor(100, 100, 200)
-        color_task = RGBColor(130, 130, 130)
+        color_task = RGBColor(200, 200, 200)
         color_milestone = RGBColor(220, 80, 80)
         color_text_dark = RGBColor(50, 50, 50)
         slide_right = self.prs.slide_width - Inches(0.1)
