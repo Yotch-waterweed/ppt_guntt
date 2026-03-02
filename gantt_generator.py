@@ -51,6 +51,9 @@ class GanttChartGenerator:
             self.quarters = []
             self.header_rows = 2
         
+        # マイルストーンの段割り当てを事前計算
+        self._ms_assignments, self._ms_row_counts = self._precompute_milestone_rows()
+        
         self.layout = self._calculate_layout()
     
     def _build_quarters(self):
@@ -93,6 +96,83 @@ class GanttChartGenerator:
                 })
         return quarters
     
+    def _get_date_fraction(self, date_str):
+        """日付文字列からカレンダー全体における相対位置（0.0〜1.0）を返す"""
+        d = datetime.date.fromisoformat(date_str)
+        cal_start = datetime.date(self.months[0]["year"], self.months[0]["month"], 1)
+        last_m = self.months[-1]
+        cal_end = datetime.date(last_m["year"], last_m["month"],
+                                calendar.monthrange(last_m["year"], last_m["month"])[1])
+        total_days = (cal_end - cal_start).days
+        if total_days <= 0:
+            return 0.0
+        return max(0.0, min(1.0, (d - cal_start).days / total_days))
+
+    def _assign_milestone_rows(self, milestones, label_char_width=0.01, margin=0.005):
+        """
+        マイルストーン群を日付昇順で処理し、最大3段で重なり回避する。
+        各マイルストーンの相対X位置（0〜1）を使い、段番号(0,1,2)のリストを返す。
+        
+        Args:
+            milestones: [{"name": ..., "date": ...}, ...]
+            label_char_width: 1文字あたりの相対幅（全体幅に対する比率）
+            margin: 図形とラベル間のマージン（相対値）
+        Returns:
+            list of int: 各マイルストーンの段番号 (0, 1, 2)
+        """
+        if not milestones:
+            return []
+        
+        MAX_ROWS = 3
+        # 日付でソート（元の順序を保持するためインデックスも持つ）
+        indexed = [(idx, ms) for idx, ms in enumerate(milestones)]
+        indexed.sort(key=lambda x: x[1]["date"])
+        
+        # 各段の右端位置を管理
+        max_right = [0.0] * MAX_ROWS
+        row_assignments = [0] * len(milestones)
+        
+        for orig_idx, ms in indexed:
+            x_frac = self._get_date_fraction(ms["date"])
+            text = ms.get("name", "")
+            # マイルストーンの右端 = ひし形の右端 + ラベル幅 + マージン
+            x_end = x_frac + margin + len(text) * label_char_width + margin
+            
+            # 空いている段を探す（優先: 段0 → 段1 → 段2）
+            assigned_row = MAX_ROWS - 1  # デフォルト: 最終段に強制配置
+            for k in range(MAX_ROWS):
+                if x_frac > max_right[k]:
+                    assigned_row = k
+                    break
+            
+            row_assignments[orig_idx] = assigned_row
+            max_right[assigned_row] = x_end
+        
+        return row_assignments
+
+    def _precompute_milestone_rows(self):
+        """
+        全レーンのマイルストーン段割り当てを事前計算する。
+        Returns:
+            ms_assignments: list[list[int]] - レーンごとの段番号リスト
+            ms_row_counts: list[int] - レーンごとの使用段数
+        """
+        ms_assignments = []
+        ms_row_counts = []
+        
+        for item in self.data:
+            milestones = [p for p in item.get("items", [])
+                          if p.get("type") == "milestone" and "date" in p]
+            if milestones:
+                rows = self._assign_milestone_rows(milestones)
+                ms_assignments.append(rows)
+                ms_row_counts.append(max(rows) + 1)  # 0-indexed → 段数
+            else:
+                ms_assignments.append([])
+                ms_row_counts.append(0)
+        
+        return ms_assignments, ms_row_counts
+
     def _calculate_layout(self):
         """スライドの使用可能高さに基づき、各要素のサイズを自動計算する"""
         base = {
@@ -110,10 +190,12 @@ class GanttChartGenerator:
         available_h = Inches(7.5) - Inches(1.0) - base["header_h"] * self.header_rows
         
         total_base_h = 0
-        for item in self.data:
+        for lane_idx, item in enumerate(self.data):
             has_items = len(item.get("items", [])) > 0
             num_tasks = len(item.get("tasks", []))
-            upper_h = (base["bar_h"] + base["ms_size"] + base["ms_clearance"]) if has_items else 0
+            ms_rows = self._ms_row_counts[lane_idx] if lane_idx < len(self._ms_row_counts) else 0
+            ms_rows = max(ms_rows, 1) if has_items else 0  # items があれば最低1段
+            upper_h = (base["bar_h"] + ms_rows * (base["ms_size"] + base["ms_clearance"])) if has_items else 0
             lower_h = (num_tasks * (base["chevron_h"] + base["chevron_gap"]) - base["chevron_gap"]) if num_tasks > 0 else 0
             row_h = base["row_margin"] * 2
             if upper_h > 0 and lower_h > 0:
@@ -341,7 +423,9 @@ class GanttChartGenerator:
         for i, item in enumerate(self.data):
             has_items = len(item.get("items", [])) > 0
             num_tasks = len(item.get("tasks", []))
-            upper_h = (L["bar_h"] + L["ms_size"] + L["ms_clearance"]) if has_items else 0
+            ms_rows = self._ms_row_counts[i] if i < len(self._ms_row_counts) else 0
+            ms_rows = max(ms_rows, 1) if has_items else 0
+            upper_h = (L["bar_h"] + ms_rows * (L["ms_size"] + L["ms_clearance"])) if has_items else 0
             lower_h = (num_tasks * (L["chevron_h"] + L["chevron_gap"]) - L["chevron_gap"]) if num_tasks > 0 else 0
             total_h = L["row_margin"] * 2
             if upper_h > 0 and lower_h > 0:
@@ -479,11 +563,16 @@ class GanttChartGenerator:
             tasks = item.get("tasks", [])
             has_tasks = len(tasks) > 0
             
+            # このレーンのマイルストーン段数を取得
+            ms_rows_for_lane = self._ms_row_counts[i] if i < len(self._ms_row_counts) else 0
+            ms_rows_for_lane = max(ms_rows_for_lane, 1) if has_items else 0
+            ms_total_h = ms_rows_for_lane * (ms_size + ms_clearance)
+            
             if has_items and has_tasks:
-                bar_y = int(row_y + row_margin + ms_size + ms_clearance)
+                bar_y = int(row_y + row_margin + ms_total_h)
                 tasks_start_y = int(bar_y + bar_h + section_gap)
             elif has_items:
-                bar_y = int(row_y + row_margin + ms_size + ms_clearance)
+                bar_y = int(row_y + row_margin + ms_total_h)
                 tasks_start_y = 0
             else:
                 bar_y = 0
@@ -515,22 +604,27 @@ class GanttChartGenerator:
                                 if tx_x < slide_right:
                                     self._add_label(slide, tx_x, bar_y, tx_w, bar_h, text, color_text_dark)
                 
-                for p_item in item.get("items", []):
-                    if p_item.get("type") == "milestone" and "date" in p_item:
-                        x = self._get_x_coordinate(table_shape, p_item["date"])
-                        ms_y = int(bar_y - ms_size - ms_clearance)
-                        shape = slide.shapes.add_shape(MSO_SHAPE.DIAMOND, int(x - ms_size/2), ms_y, ms_size, ms_size)
-                        shape.fill.solid()
-                        shape.fill.fore_color.rgb = color_milestone
-                        shape.line.color.rgb = color_milestone
-                        shape.line.width = Pt(1)
-                        
-                        text = p_item.get("name", "")
-                        if text:
-                            tx_x = int(x + ms_size/2 + Pt(1))
-                            tx_w = min(Inches(1.5), max(int(slide_right - tx_x), Pt(10)))
-                            if tx_x < slide_right:
-                                self._add_label(slide, tx_x, ms_y, tx_w, ms_size, text, color_text_dark)
+                # マイルストーンを段割り当てに基づいて描画
+                milestones = [p for p in item.get("items", [])
+                              if p.get("type") == "milestone" and "date" in p]
+                lane_assignments = self._ms_assignments[i] if i < len(self._ms_assignments) else []
+                
+                for ms_idx, p_item in enumerate(milestones):
+                    x = self._get_x_coordinate(table_shape, p_item["date"])
+                    row_k = lane_assignments[ms_idx] if ms_idx < len(lane_assignments) else 0
+                    ms_y = int(bar_y - (row_k + 1) * (ms_size + ms_clearance))
+                    shape = slide.shapes.add_shape(MSO_SHAPE.DIAMOND, int(x - ms_size/2), ms_y, ms_size, ms_size)
+                    shape.fill.solid()
+                    shape.fill.fore_color.rgb = color_milestone
+                    shape.line.color.rgb = color_milestone
+                    shape.line.width = Pt(1)
+                    
+                    text = p_item.get("name", "")
+                    if text:
+                        tx_x = int(x + ms_size/2 + Pt(1))
+                        tx_w = min(Inches(1.5), max(int(slide_right - tx_x), Pt(10)))
+                        if tx_x < slide_right:
+                            self._add_label(slide, tx_x, ms_y, tx_w, ms_size, text, color_text_dark)
             
             if has_tasks:
                 for t_idx, t_item in enumerate(tasks):
