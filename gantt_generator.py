@@ -612,7 +612,9 @@ class GanttChartGenerator:
                 for ms_idx, p_item in enumerate(milestones):
                     x = self._get_x_coordinate(table_shape, p_item["date"])
                     row_k = lane_assignments[ms_idx] if ms_idx < len(lane_assignments) else 0
-                    ms_y = int(bar_y - (row_k + 1) * (ms_size + ms_clearance))
+                    # 日付が若いもの(row_k=0)を上段に配置: row_kを反転
+                    visual_row = (ms_rows_for_lane - 1) - row_k
+                    ms_y = int(bar_y - (visual_row + 1) * (ms_size + ms_clearance))
                     shape = slide.shapes.add_shape(MSO_SHAPE.DIAMOND, int(x - ms_size/2), ms_y, ms_size, ms_size)
                     shape.fill.solid()
                     shape.fill.fore_color.rgb = color_milestone
